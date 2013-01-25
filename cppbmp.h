@@ -19,7 +19,7 @@
 
 #define RED 0
 #define BLUE 1
-#define YELLOW 2
+#define GREEN 2
 #define VAL 3
 #define FOURTH 4
 
@@ -31,12 +31,12 @@ class pixle{
     pixle();
     pixle(unsigned int);
     //accessors
-    void setRed(unsigned char red);
-    unsigned char getRed();
     void setBlue(unsigned char blue);
     unsigned char getBlue();
-    void setYellow(unsigned char yellow);
-    unsigned char getYellow();
+    void setRed(unsigned char red);
+    unsigned char getRed();
+    void setGreen(unsigned char green);
+    unsigned char getGreen();
     void setFourth(unsigned char fourth);
     unsigned char getFourth();
     void setArrayval(unsigned int inarrayval);
@@ -47,41 +47,45 @@ class pixle{
 pixle::pixle(){
     arrayval = 0u;
 }
-pixle::pixle(unsigned int arrayval){
+pixle::pixle(unsigned int inarrayval){
     //code to read in array val and set other colors toooooooooo
+    arrayval = inarrayval;
 }
 
 //getters and setters
-void pixle::setRed(unsigned char red){
-    arrayval &= (!(0xFF<<0))|(red<<0);
-}
-unsigned char pixle::getRed(){
-    return (arrayval&(0xFF<<0));
-}
 void pixle::setBlue(unsigned char blue){
-    arrayval &= (!(0xFF<<8))|(red<<8);
+//    arrayval |= (!(0xFF<<0))|(blue<<0);
+    arrayval = (arrayval&(0xFFFFFF00))|((blue<<0)&(0x000000FF));
 }
 unsigned char pixle::getBlue(){
-    return (arrayval&(0xFF<<8));
+    return (arrayval&(0xFF<<0));
 }
-void pixle::setYellow(unsigned char yellow){
-    arrayval &= (!(0xFF<<16))|(red<<16);
+void pixle::setGreen(unsigned char green){
+    arrayval = (arrayval&(0xFFFF00FF))|((green<<8)&(0x0000FF00));
 }
-unsigned char pixle::getYellow(){
-    return (arrayval&(0xFF<<16));
+unsigned char pixle::getGreen(){
+    return ((arrayval&(0xFF<<8))>>8);
+}
+void pixle::setRed(unsigned char red){
+    arrayval = (arrayval&(0xFF00FFFF))|((red<<16)&(0x00FF0000));
+}
+unsigned char pixle::getRed(){
+    return ((arrayval&(0xFF<<16))>>16);
 }
 void pixle::setFourth(unsigned char fourth){
-    arrayval &= (!(0xFF<<24))|(red<<24);
+    arrayval = (arrayval&(0x00FFFFFF))|((fourth<<24)&(0xFF000000));
 }
 unsigned char pixle::getFourth(){
-    return (arrayval&(0xFF<<24));
+    return ((arrayval&(0xFF<<24))>>24);
 }
 void pixle::setArrayval(unsigned int inarrayval){
     arrayval = inarrayval;
+
 }
 void pixle::setArrayval(char inarrayval){
-    //figure out a way to set arrayval to the iteration of the appropriate elements....
-
+    char c=inarrayval;
+    // get correct mask then multiply by 1010101 = 0x55
+    arrayval = (((((0x3<<0)&c)>>0)*0x55)<<0) | (((((0x3<<2)&c)>>2)*0x55)<<8) | (((((0x3<<4)&c)>>4)*0x55)<<16) | (((((0x3<<6)&c)>>6)*0x55)<<24);
 }
 unsigned int pixle::getArrayval(){
     return arrayval;
@@ -197,7 +201,7 @@ bmp::bmp(FILE* fin){
     else if (bitsperpixle ==8) {
         for (i =0; i<width; i++) {
             for (ii=0; ii<height; ii++) {
-                pixlearray[i][ii].setArrayval(fgetc(fin));
+                pixlearray[i][ii].setArrayval(char(fgetc(fin)));
             }
         }
     }
@@ -240,19 +244,19 @@ void bmp::printbmp(int color){
         for (ii = 0; ii<abs(width); ii++) {
             switch(color){
                 case RED:
-                    printf("%x ",pixlearray[i][ii].getRed());
+                    printf("%0x ",pixlearray[i][ii].getRed());
                     break;
                 case BLUE:
-                    printf("%x ",pixlearray[i][ii].getBlue());
+                    printf("%0x ",pixlearray[i][ii].getBlue());
                     break;
-                case YELLOW:
-                    printf("%x ",pixlearray[i][ii].getYellow());
+                case GREEN:
+                    printf("%0x ",pixlearray[i][ii].getGreen());
                     break;
                 case VAL:
-                    printf("%x ",pixlearray[i][ii].getArrayval());
+                    printf("%08x ",pixlearray[i][ii].getArrayval());
                     break;
                 case FOURTH:
-                    printf("%x ",pixlearray[i][ii].getFourth());
+                    printf("%0x ",pixlearray[i][ii].getFourth());
                     break;
                 default:
                     printf("failure");
@@ -271,13 +275,12 @@ int bmp::print_report(){
     printf("bpp:    %hi\n",bitsperpixle);
 
     //    reducerange(&filein);
-    setcolors();
     printf("blue:\n");
     printbmp(BLUE);
-    printf("yellow:\n");
-    printbmp(YELLOW);
     printf("red:\n");
     printbmp(RED);
+    printf("green:\n");
+    printbmp(GREEN);
     printf("fourth:\n");
     printbmp(FOURTH);
     printf("bytes:\n");
@@ -383,6 +386,7 @@ int downsample(bmpfile* in, bmpfile* out){
                 }
             }
             printf("%lu,%lu,%lu,%lu,%i\n",sred,sblue,syellow,sfourth,dw*dh);
+            //need to update the color listings here...
             out->pixlearray[i/dw][ii/dh].red = sred/(dh*dw);
             out->pixlearray[i/dw][ii/dh].blue = sblue/(dh*dw);
             out->pixlearray[i/dw][ii/dh].yellow = syellow/(dh*dw);

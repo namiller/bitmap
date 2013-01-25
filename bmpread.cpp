@@ -29,13 +29,15 @@ int main(){
     printf("here\n");
     bmp opened = bmp(fin);
     printf("here too!\n");
-    bmp fun = bmp(100,100);
+    bmp fun = bmp(16,16);
     
     for(i=0;i<fun.width;i++){
         for(ii=0;ii<fun.height;ii++){
-            fun.pixlearray[i][ii].arrayval = ((relprime(i+1,ii+1)!=1)?0xffffffff:0x00000000);
-            //0xffffffff - (relprime(i+1,ii+1)*0x11111111 - 0x11111111);
-            //((relprime(i+1,ii+1)!=1)?0xffffffff:0x00000000);
+//            fun.pixlearray[i][ii].setArrayval(((relprime(i+1,ii+1)!=1)?0xffffffff:0x00000000));
+              fun.pixlearray[i][ii].setBlue(16*i);
+              fun.pixlearray[i][ii].setRed(16*ii);
+              fun.pixlearray[i][ii].setGreen(0x00);
+              fun.pixlearray[i][ii].setFourth(0xff);
         }
     }
     printf("heretoo!\n");
@@ -43,14 +45,9 @@ int main(){
 //    print_report(&fun);
 //    initBMP_w_h(&newbmp,abs(filein.width),abs(filein.height),32);
 
-//    downsample(&filein,&newbmp);
 
     fun.print_report();
-
-//    fun.writeBMP(fout);        
-    opened.writeBMP(fout);
-//    dalloc(&newbmp);
-//    dalloc(&filein);
+    fun.writeBMP(fout);
 
     fclose(fout);
     fclose(fin);
